@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from bank_api.db.models import CardInvoice, AccountTransaction, Customer
+from bank_api.db.models import AccountTransaction, CardInvoice, Customer
 
 
 def get_unpaid_invoices(

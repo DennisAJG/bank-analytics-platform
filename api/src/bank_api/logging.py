@@ -7,14 +7,14 @@ import structlog
 
 DEFAULT_LOG_FORMAT = "%(message)s"
 
+
 def configure_logging(log_level: str = "INFO") -> None:
-    
     logging.basicConfig(
         format=DEFAULT_LOG_FORMAT,
         stream=sys.stdout,
         level=getattr(logging, log_level.upper(), logging.INFO),
     )
-    
+
     structlog.configure(
         processors=[
             structlog.contextvars.merge_contextvars,
@@ -30,6 +30,7 @@ def configure_logging(log_level: str = "INFO") -> None:
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
-    
+
+
 def get_logger(name: str = "bank_api"):
     return structlog.get_logger(name)

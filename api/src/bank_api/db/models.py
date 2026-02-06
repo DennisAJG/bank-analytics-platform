@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -23,9 +22,9 @@ class Customer(Base):
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    accounts: Mapped[list["Account"]] = relationship(back_populates="customer")
-    invoices: Mapped[list["CardInvoice"]] = relationship(back_populates="customer")
-    transactions: Mapped[list["AccountTransaction"]] = relationship(back_populates="customer")
+    accounts: Mapped[list[Account]] = relationship(back_populates="customer")
+    invoices: Mapped[list[CardInvoice]] = relationship(back_populates="customer")
+    transactions: Mapped[list[AccountTransaction]] = relationship(back_populates="customer")
 
 
 class Account(Base):
@@ -38,9 +37,11 @@ class Account(Base):
 
     balance: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0)
 
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
-    customer: Mapped["Customer"] = relationship(back_populates="accounts")
+    customer: Mapped[Customer] = relationship(back_populates="accounts")
 
 
 class CardInvoice(Base):
@@ -51,12 +52,14 @@ class CardInvoice(Base):
 
     invoice_ref: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
-    paid_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     amount: Mapped[Decimal] = mapped_column(Numeric(14, 2))
-    status: Mapped[str] = mapped_column(String(20), default="unpaid", index=True)  # unpaid|paid|overdue
+    status: Mapped[str] = mapped_column(
+        String(20), default="unpaid", index=True
+    )  # unpaid|paid|overdue
 
-    customer: Mapped["Customer"] = relationship(back_populates="invoices")
+    customer: Mapped[Customer] = relationship(back_populates="invoices")
 
 
 class AccountTransaction(Base):
@@ -70,6 +73,6 @@ class AccountTransaction(Base):
 
     tx_type: Mapped[str] = mapped_column(String(32), index=True)  # debit|credit|pix|transfer...
     amount: Mapped[Decimal] = mapped_column(Numeric(14, 2))
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    customer: Mapped["Customer"] = relationship(back_populates="transactions")
+    customer: Mapped[Customer] = relationship(back_populates="transactions")

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter
 from sqlalchemy.exc import SQLAlchemyError
 
 from bank_api.db.migrations import check_db_connection

@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 import random
 import uuid
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
 
-from bank_api.db.models import Customer, Account, CardInvoice, AccountTransaction
+from bank_api.db.models import Account, AccountTransaction, CardInvoice, Customer
 from bank_api.db.session import get_sessionmaker
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def seed(reset: bool = False) -> None:
@@ -62,7 +62,7 @@ def seed(reset: bool = False) -> None:
         now = _now()
 
         # faturas (algumas overdue)
-        for idx, c in enumerate(customers, start=1):
+        for _idx, c in enumerate(customers, start=1):
             due = now - timedelta(days=random.choice([5, 10, 35, -10]))  # algumas no futuro
             status = "unpaid"
             paid_at = None
@@ -89,7 +89,9 @@ def seed(reset: bool = False) -> None:
         for c in customers:
             tx_count = 60 if c.id in hot_customer_ids else random.randint(3, 20)
             for _ in range(tx_count):
-                occurred = now - timedelta(hours=random.randint(0, 72), minutes=random.randint(0, 59))
+                occurred = now - timedelta(
+                    hours=random.randint(0, 72), minutes=random.randint(0, 59)
+                )
                 tx = AccountTransaction(
                     customer_id=c.id,
                     tx_ref=f"TX-{uuid.uuid4().hex[:14]}",
