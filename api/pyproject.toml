@@ -74,6 +74,10 @@ indent-style = "space"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+  "unit: fast tests without external dependencies",
+  "integration: tests requiring docker/services (db, api)",
+]
 addopts = [
   "-q",
   "--disable-warnings",
@@ -88,3 +92,6 @@ asyncio_mode = "auto"
 
 [tool.ruff.lint.per-file-ignores]
 "src/bank_api/api/routes/*.py" = ["B008"]
+
+
+
