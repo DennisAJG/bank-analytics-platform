@@ -1,8 +1,7 @@
-import bank_api.api.routes.reports as reports_routes
-
 from fastapi.testclient import TestClient
-from bank_api.main import app
 
+import bank_api.api.routes.reports as reports_routes
+from bank_api.main import app
 
 client = TestClient(app)
 
