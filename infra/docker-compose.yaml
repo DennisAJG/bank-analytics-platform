@@ -1,0 +1,86 @@
+services:
+  postgres:
+    image: postgres:15.8
+    container_name: bank-analytics-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-bankdb}
+      POSTGRES_USER: ${POSTGRES_USER:-bankuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bankpass}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - bank_postgres_data:/var/lib/postgresql/data
+      - ../docker/postgres/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - bank_net
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/api/Dockerfile
+    container_name: bank-analytics-api
+    restart: unless-stopped
+    environment:
+      BANK_DATABASE_URL: "postgresql+psycopg://bankuser:bankpass@postgres:5432/bankdb"
+      BANK_LOG_LEVEL: "INFO"
+      BANK_ENVIRONMENT: "development"
+    ports:
+      - "${BANK_API_PORT:-8001}:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bank_net
+  
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: bank-analytics-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - bank_prometheus_data:/prometheus
+    command: 
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+    ports:
+      - "9090:9090"
+    networks:
+      - bank_net
+    depends_on:
+      - api
+
+  grafana:
+    image: grafana/grafana:10.4.5
+    container_name: bank-analytics-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-adminpass}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3001:3000"
+    volumes:
+      - bank_grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - bank_net
+    depends_on:
+      - prometheus
+
+volumes:
+  bank_postgres_data:
+  bank_prometheus_data:
+  bank_grafana_data:
+
+networks:
+  bank_net:
+    driver: bridge
