@@ -19,6 +19,26 @@ services:
       retries: 20
     networks:
       - bank_net
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/api/Dockerfile
+    container_name: bank-analytics-api
+    restart: unless-stopped
+    environment:
+      BANK_DATABASE_URL: "postgresql+psycopg://bankuser:bankpass@postgres:5432/bankdb"
+      BANK_LOG_LEVEL: "INFO"
+      BANK_ENVIRONMENT: "development"
+    ports:
+      - "${BANK_API_PORT:-8001}:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bank_net
+    
+
 volumes:
   bank_postgres_data:
 
