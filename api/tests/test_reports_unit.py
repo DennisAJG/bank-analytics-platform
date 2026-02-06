@@ -6,6 +6,7 @@ from bank_api.main import app
 
 client = TestClient(app)
 
+
 def test_unpaid_invoices_unit(monkeypatch):
     def fake_report_unpaid_invoices(_db):
         class Row:
